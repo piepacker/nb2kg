@@ -1,0 +1,10 @@
+FROM jupyter/minimal-notebook:fa77fe99579b
+
+# Do the pip installs as the unprivileged notebook user
+USER jovyan
+
+COPY custom /home/jovyan/.jupyter/custom
+
+# Run with remote kernel managers
+CMD ["jupyter", "notebook", \
+     "--NotebookApp.ip=0.0.0.0"]

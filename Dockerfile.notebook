@@ -14,6 +14,8 @@ ADD . /src
 RUN pip install /src && \
     jupyter serverextension enable --py nb2kg --sys-prefix
 
+COPY custom /home/jovyan/.jupyter/custom
+
 # Run with remote kernel managers
 CMD ["jupyter", "notebook", \
      "--NotebookApp.ip=0.0.0.0", \

@@ -11,7 +11,9 @@ services:
      - "9888:8888"
     environment:
       KG_URL: http://nb2kg-kg:8888
-      KG_AUTH_TOKEN: colonels
+      # KG_AUTH_TOKEN: colonels
+    volumes:
+      - "/home/jtestard/go/src/github.com/piepacker/nb2kg/custom:/home/jovyan/.jupyter/custom"
     command: >
       jupyter notebook
       --NotebookApp.ip=0.0.0.0
@@ -30,8 +32,23 @@ services:
     environment:
       KG_ALLOW_ORIGIN: '*'
       KG_LIST_KERNELS: "True"
-      KG_AUTH_TOKEN: colonels
+      # KG_AUTH_TOKEN: colonels
     command: >
       jupyter kernelgateway
       --KernelGatewayApp.ip=0.0.0.0
       --KernelGatewayApp.log_level=DEBUG
+
+  notebook-alone:
+    build:
+      context: .
+      dockerfile: Dockerfile.notebook-alone
+    image: nb2kg/notebook-alone
+    container_name: nb2kg-notebook-alone
+    ports:
+      - "8888:8888"
+    volumes:
+      - "/home/jtestard/go/src/github.com/piepacker/nb2kg/custom:/home/jovyan/.jupyter/custom"
+    command: >
+      jupyter notebook
+      --NotebookApp.ip=0.0.0.0
+
