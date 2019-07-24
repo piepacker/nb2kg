@@ -81,37 +81,37 @@
  * @static
  */
 
-// require(["codemirror/keymap/sublime", "notebook/js/cell", "base/js/namespace"],
-//     function(sublime_keymap, cell, IPython) {
-//         // setTimeout(function(){ // uncomment line to fake race-condition
-//         cell.Cell.options_default.cm_config.keyMap = 'sublime';
-//         var cells = IPython.notebook.get_cells();
-//         for(var cl=0; cl< cells.length ; cl++){
-//             cells[cl].code_mirror.setOption('keyMap', 'sublime');
-//         }
-//  
-//         // }, 1000)// uncomment  line to fake race condition 
-//     } 
-// );
+require(["codemirror/keymap/sublime", "notebook/js/cell", "base/js/namespace"],
+    function(sublime_keymap, cell, IPython) {
+        // setTimeout(function(){ // uncomment line to fake race-condition
+        cell.Cell.options_default.cm_config.keyMap = 'sublime';
+        var cells = IPython.notebook.get_cells();
+        for(var cl=0; cl< cells.length; cl++){
+            cells[cl].code_mirror.setOption('keyMap', 'sublime');
+        }
+        // }, 1000)// uncomment  line to fake race condition
+    }
+);
 
-// define(['base/js/namespace'], function(Jupyter){
-//     Jupyter._target = '_self';
-// });
-//
-//
-// $(".header-container").remove()
-// MathJax.Hub.Config({
-//         "HTML-CSS": {
-//             /*preferredFont: "TeX",*/
-//             /*availableFonts: ["TeX", "STIX"],*/
-//             styles: {
-//                 scale: 100,
-//                 ".MathJax_Display": {
-//                     "font-size": "100%",
-//                 }
-//             }
-//         }
-//     });
+define(['base/js/namespace'], function(Jupyter){
+    Jupyter._target = '_self';
+});
+
+$(".header-container").remove()
+
+MathJax.Hub.Config({
+        "HTML-CSS": {
+            /*preferredFont: "TeX",*/
+            /*availableFonts: ["TeX", "STIX"],*/
+            styles: {
+                scale: 100,
+                ".MathJax_Display": {
+                    "font-size": "100%",
+                }
+            }
+        }
+    });
+
 if (!String.prototype.format) {
   String.prototype.format = function() {
     var args = arguments;
@@ -150,7 +150,6 @@ var createKernel = (base_url) => {
 const sleep = (milliseconds) => {
   return new Promise(resolve => setTimeout(resolve, milliseconds))
 }
-
 sleep(500).then(() => {
     var cells = IPython.notebook.get_cells();
     $('.input_prompt').each((i, e) => {
