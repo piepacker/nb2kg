@@ -112,10 +112,45 @@
 //             }
 //         }
 //     });
+if (!String.prototype.format) {
+  String.prototype.format = function() {
+    var args = arguments;
+    return this.replace(/{(\d+)}/g, function(match, number) {
+      return typeof args[number] != 'undefined'
+        ? args[number]
+        : match
+      ;
+    });
+  };
+}
+
+var createKernel = (base_url) => {
+    var kernelID = ""
+    $.ajax({
+        type: 'POST',
+        url: "{0}/api/kernels".format(base_url),
+        crossDomain: true,
+        data: '{"name":"python"}',
+        dataType: 'json',
+        contentType: 'application/json',
+        success: function(responseData, textStatus, jqXHR) {
+            console.log("responseData {0}".format(responseData))
+            console.log("textStatus {0}".format(textStatus))
+            console.log("jqXHR {0}".format(jqXHR))
+
+        },
+        error: function (responseData, textStatus, errorThrown) {
+            console.err("responseData {0}".format(responseData))
+            console.err("textStatus {0}".format(textStatus))
+            console.err("errorThrown {0}".format(errorThrown))
+        }
+    });
+}
 
 const sleep = (milliseconds) => {
   return new Promise(resolve => setTimeout(resolve, milliseconds))
 }
+
 sleep(500).then(() => {
     var cells = IPython.notebook.get_cells();
     $('.input_prompt').each((i, e) => {
@@ -126,6 +161,7 @@ sleep(500).then(() => {
             alert("sending code '" + cells[i].get_text() + "' to piepacker");
         });
     })
+    createKernel("http://127.0.0.1:9889")
 })
 
 // I should be able to use an event trigger to load the script above, but instead
