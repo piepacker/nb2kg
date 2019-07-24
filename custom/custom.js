@@ -130,19 +130,19 @@ var createKernel = (base_url) => {
         type: 'POST',
         url: "{0}/api/kernels".format(base_url),
         crossDomain: true,
+        headers: {"X-Requested-With": "value"},
         data: '{"name":"python"}',
         dataType: 'json',
         contentType: 'application/json',
         success: function(responseData, textStatus, jqXHR) {
-            console.log("responseData {0}".format(responseData))
+            console.log("responseData {0}".format(JSON.stringify(responseData, null, 2)))
             console.log("textStatus {0}".format(textStatus))
             console.log("jqXHR {0}".format(jqXHR))
-
         },
         error: function (responseData, textStatus, errorThrown) {
-            console.err("responseData {0}".format(responseData))
-            console.err("textStatus {0}".format(textStatus))
-            console.err("errorThrown {0}".format(errorThrown))
+            console.error("responseData {0}".format(responseData))
+            console.error("textStatus {0}".format(textStatus))
+            console.error("errorThrown {0}".format(errorThrown))
         }
     });
 }
@@ -160,7 +160,7 @@ sleep(500).then(() => {
             alert("sending code '" + cells[i].get_text() + "' to piepacker");
         });
     })
-    createKernel("http://127.0.0.1:9889")
+    createKernel("http://35.197.122.177:9889")
 })
 
 // I should be able to use an event trigger to load the script above, but instead

@@ -66,3 +66,5 @@ etc/notebooks/*
 
 IDE stuff
 .idea/
+
+node_modules
