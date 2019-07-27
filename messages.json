@@ -1,0 +1,106 @@
+{
+  "parent_header": {
+    "session": "632ad5181b6236f308e9521417cb7095",
+    "username": "",
+    "date": "2019-07-27T22:12:26.049890",
+    "msg_id": "7d8ee63c97a66554dfb9b0b2185586c1",
+    "version": "5.2",
+    "msg_type": "execute_request"
+  },
+  "channel": "iopub",
+  "header": {
+    "session": "744992ca-3e32-48db-8598-e673c139ea9e",
+    "username": "username",
+    "date": "2019-07-27T22:12:26.051210",
+    "msg_id": "d751b057-8a71-40eb-bc78-7a614589cf34",
+    "version": "5.0",
+    "msg_type": "status"
+  },
+  "metadata": {},
+  "msg_id": "d751b057-8a71-40eb-bc78-7a614589cf34",
+  "content": {
+    "execution_state": "busy"
+  },
+  "buffers": [],
+  "msg_type": "status"
+}
+{
+  "parent_header": {
+    "session": "632ad5181b6236f308e9521417cb7095",
+    "username": "",
+    "date": "2019-07-27T22:12:26.049890",
+    "msg_id": "7d8ee63c97a66554dfb9b0b2185586c1",
+    "version": "5.2",
+    "msg_type": "execute_request"
+  },
+  "channel": "iopub",
+  "header": {
+    "session": "744992ca-3e32-48db-8598-e673c139ea9e",
+    "username": "username",
+    "date": "2019-07-27T22:12:26.052131",
+    "msg_id": "98d09b51-9785-407c-ac33-bde7df421846",
+    "version": "5.0",
+    "msg_type": "execute_input"
+  },
+  "metadata": {},
+  "msg_id": "98d09b51-9785-407c-ac33-bde7df421846",
+  "content": {
+    "code": "print(\"hello\")",
+    "execution_count": 1
+  },
+  "buffers": [],
+  "msg_type": "execute_input"
+}
+{
+  "parent_header": {
+    "session": "632ad5181b6236f308e9521417cb7095",
+    "username": "",
+    "date": "2019-07-27T22:12:26.049890",
+    "msg_id": "7d8ee63c97a66554dfb9b0b2185586c1",
+    "version": "5.2",
+    "msg_type": "execute_request"
+  },
+  "channel": "iopub",
+  "header": {
+    "session": "744992ca-3e32-48db-8598-e673c139ea9e",
+    "username": "username",
+    "date": "2019-07-27T22:12:26.064065",
+    "msg_id": "664a13f7-f8b2-4f99-b695-a97e1c600290",
+    "version": "5.0",
+    "msg_type": "stream"
+  },
+  "metadata": {},
+  "msg_id": "664a13f7-f8b2-4f99-b695-a97e1c600290",
+  "content": {
+    "text": "hello\n",
+    "name": "stdout"
+  },
+  "buffers": [],
+  "msg_type": "stream"
+}
+{
+  "parent_header": {
+    "session": "632ad5181b6236f308e9521417cb7095",
+    "username": "",
+    "date": "2019-07-27T22:12:26.049890",
+    "msg_id": "7d8ee63c97a66554dfb9b0b2185586c1",
+    "version": "5.2",
+    "msg_type": "execute_request"
+  },
+  "channel": "iopub",
+  "header": {
+    "session": "744992ca-3e32-48db-8598-e673c139ea9e",
+    "username": "username",
+    "date": "2019-07-27T22:12:26.069105",
+    "msg_id": "127c1cbe-8207-4635-9a12-a60890437d4c",
+    "version": "5.0",
+    "msg_type": "status"
+  },
+  "metadata": {},
+  "msg_id": "127c1cbe-8207-4635-9a12-a60890437d4c",
+  "content": {
+    "execution_state": "idle"
+  },
+  "buffers": [],
+  "msg_type": "status"
+}
