@@ -1,0 +1,12 @@
+{
+  "name": "kernel-gateway-node-client-example",
+  "author": "Jupyter Community",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@jupyterlab/services": "^4.0.1",
+    "nan": "^2.14.0",
+    "ws": "^0.8.0",
+    "xmlhttprequest": "^1.8.0"
+  }
+}

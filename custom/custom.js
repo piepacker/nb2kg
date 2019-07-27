@@ -81,102 +81,33 @@
  * @static
  */
 
-require(["codemirror/keymap/sublime", "notebook/js/cell", "base/js/namespace"],
-    function(sublime_keymap, cell, IPython) {
-        // setTimeout(function(){ // uncomment line to fake race-condition
-        cell.Cell.options_default.cm_config.keyMap = 'sublime';
-        var cells = IPython.notebook.get_cells();
-        for(var cl=0; cl< cells.length; cl++){
-            cells[cl].code_mirror.setOption('keyMap', 'sublime');
-        }
-        // }, 1000)// uncomment  line to fake race condition
-    }
-);
-
-define(['base/js/namespace'], function(Jupyter){
-    Jupyter._target = '_self';
-});
-
-$(".header-container").remove()
-
-MathJax.Hub.Config({
-        "HTML-CSS": {
-            /*preferredFont: "TeX",*/
-            /*availableFonts: ["TeX", "STIX"],*/
-            styles: {
-                scale: 100,
-                ".MathJax_Display": {
-                    "font-size": "100%",
-                }
-            }
-        }
-    });
-
-if (!String.prototype.format) {
-  String.prototype.format = function() {
-    var args = arguments;
-    return this.replace(/{(\d+)}/g, function(match, number) {
-      return typeof args[number] != 'undefined'
-        ? args[number]
-        : match
-      ;
-    });
-  };
-}
-
-var createKernel = (base_url) => {
-    var kernelID = ""
-    $.ajax({
-        type: 'POST',
-        url: "{0}/api/kernels".format(base_url),
-        crossDomain: true,
-        headers: {"X-Requested-With": "value"},
-        data: '{"name":"python"}',
-        dataType: 'json',
-        contentType: 'application/json',
-        success: function(responseData, textStatus, jqXHR) {
-            console.log("responseData {0}".format(JSON.stringify(responseData, null, 2)))
-            console.log("textStatus {0}".format(textStatus))
-            console.log("jqXHR {0}".format(jqXHR))
-        },
-        error: function (responseData, textStatus, errorThrown) {
-            console.error("responseData {0}".format(responseData))
-            console.error("textStatus {0}".format(textStatus))
-            console.error("errorThrown {0}".format(errorThrown))
-        }
-    });
-}
-
-const sleep = (milliseconds) => {
-  return new Promise(resolve => setTimeout(resolve, milliseconds))
-}
-sleep(500).then(() => {
-    var cells = IPython.notebook.get_cells();
-    $('.input_prompt').each((i, e) => {
-        var button = document.createElement("button")
-        button.innerHTML = "Run in piepacker"
-        $(e).append(button)
-        button.addEventListener ("click", function() {
-            alert("sending code '" + cells[i].get_text() + "' to piepacker");
-        });
-    })
-    createKernel("http://35.197.122.177:9889")
-})
-
-// I should be able to use an event trigger to load the script above, but instead
-// I am using a sleep. TODO: fix this
-// NOTE: I don't know why the example below does not produce an output
-define([
-    'base/js/events',
-    'base/js/namespace'
-], function(events, IPython) {
-    console.log("init function")
-    events.on('app_initialized.DashboardApp', function(){
-        console.log("dashboard initialized")
-    });
-    events.on('app_initialized.NotebookApp', function(){
-        console.log("notebook initialized")
-        var cells = IPython.notebook.get_cells();
-        console.log("cells in nb init=[" + cells + "]")
-    });
-});
+ /**
+  Kernel message format:
+  "{
+  "header": {
+    "date": "2019-07-27T15:52:38.066373",
+    "username": "username",
+    "msg_type": "stream",
+    "session": "b5028f92-355a-4927-aeaa-65f4ffb7696b",
+    "msg_id": "9e39d8bc-b3d2-474f-85a3-9e719f4f21ce",
+    "version": "5.0"
+  },
+  "metadata": {},
+  "msg_type": "stream",
+  "channel": "iopub",
+  "content": {
+    "text": "hello 3\n",
+    "name": "stdout"
+  },
+  "buffers": [],
+  "msg_id": "9e39d8bc-b3d2-474f-85a3-9e719f4f21ce",
+  "parent_header": {
+    "date": "2019-07-27T15:52:38.051303",
+    "username": "username",
+    "msg_type": "execute_request",
+    "session": "E2111629A58647AE82FEE1DD3EB08A37",
+    "msg_id": "F2694ED9FDDA4652A5DB7A449F293A95",
+    "version": "5.0"
+  }
+}"
+  */

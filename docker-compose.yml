@@ -13,7 +13,7 @@ services:
       KG_URL: http://nb2kg-kg:8888
       # KG_AUTH_TOKEN: colonels
     volumes:
-      - "/home/jtestard/go/src/github.com/piepacker/nb2kg/custom:/home/jovyan/.jupyter/custom"
+      - "/Users/julestestard/go/src/github.com/piepacker/nb2kg/custom:/home/jovyan/.jupyter/custom"
     command: >
       jupyter notebook
       --NotebookApp.ip=0.0.0.0
@@ -49,7 +49,7 @@ services:
     ports:
       - "8888:8888"
     volumes:
-      - "/home/jtestard/go/src/github.com/piepacker/nb2kg/custom:/home/jovyan/.jupyter/custom"
+      - "/Users/julestestard/go/src/github.com/piepacker/nb2kg/custom:/home/jovyan/.jupyter/custom"
     command: >
       jupyter notebook
       --NotebookApp.ip=0.0.0.0
