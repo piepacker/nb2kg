@@ -5,6 +5,8 @@
   "private": true,
   "dependencies": {
     "@jupyterlab/services": "^4.0.1",
+    "lodash-amd": "^4.17.15",
+    "lodash.clonedeep": "^4.5.0",
     "nan": "^2.14.0",
     "ws": "^0.8.0",
     "xmlhttprequest": "^1.8.0"

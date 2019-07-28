@@ -156,6 +156,7 @@ require.config({
     paths: {
       'jquery': 'https://code.jquery.com/jquery-2.2.4.min',
       '@jupyterlab/services': 'https://unpkg.com/@jupyterlab/services@^0.48/dist/index',
+      'lodash-amd': 'https://unpkg.com/lodash-amd@4.17.15/main'
     }
 });
 
@@ -193,7 +194,8 @@ define([
     "notebook/js/actions",
     "codemirror/keymap/sublime",
     "codemirror/lib/codemirror",
-], function(IPython, services, cell, actions, sublime, CodeMirror) {
+    'lodash-amd',
+], function(IPython, services, cell, actions, sublime, CodeMirror, cloner) {
     // TODO: fix this
     sleep(300).then(() => {
         km = new services.KernelManager({
@@ -212,14 +214,19 @@ define([
             }
         }
 
-        var extraActions = {
+        var configNewCell = (newCell) => {
+            newCell.code_mirror.setOption('keyMap', 'sublime')
+            newCell.code_mirror.setOption('lineNumbers', true)
+        }
+
+        var originalActions = cloner.cloneDeep(IPython.actions._actions)
+        var piepackerActions = {
             'jupyter-notebook': {
                 'insert-cell-below': {
                     overwrite: false,
                     handler: function(env) {
                         var newCell = env.notebook.get_selected_cell();
-                        newCell.code_mirror.setOption('keyMap', 'sublime')
-                        newCell.code_mirror.setOption('lineNumbers', true)
+                        configNewCell(newCell)
                         kernel = getActiveKernel()
                         if (kernel == undefined) {
                             return
@@ -230,84 +237,80 @@ define([
                             }
                         });
                     }
+                },
+                'run-cell-and-select-next': {
+                    overwrite: true,
+                    handler: function (env) {
+                        kernel = getActiveKernel()
+                        var notebook = env.notebook
+                        var indices = notebook.get_selected_cells_indices();
+                        var cell_index;
+                        if (indices.length > 1) {
+                            console.error("exec multiple cells: not supported");
+                            return;
+                        }
+                        var cell = notebook.get_selected_cell();
+                        var code = cell.get_text()
+                        cell.output_area.clear_output();
+                        // // Execute and handle replies on the kernel.
+                        var future = kernel.requestExecute({ code: code });
+                        // // record each IOPub message
+                        future.onIOPub = function(msg) {
+                            cell.output_area.handle_output(msg)
+                        };
+                        future.onReply = function(reply) {
+                            console.log('Got execute reply {0}'.format(reply));
+                        };
+                        future.done.then(function() {
+                            console.log('done!');
+                        });
+                    
+                        // If we are at the end always insert a new cell and return
+                        cell_index = notebook.find_cell_index(cell);
+                        if (cell_index === (notebook.ncells()-1)) {
+                            notebook.command_mode();
+                            notebook.insert_cell_below();
+                            notebook.select(cell_index+1);
+                            var nextCell = notebook.get_selected_cell();
+                            configNewCell(nextCell)
+                            notebook.edit_mode();
+                            notebook.scroll_to_bottom();
+                            notebook.set_dirty(true);
+                            return;
+                        }
+                    
+                        notebook.command_mode();
+                        notebook.select(cell_index+1);
+                        notebook.focus_cell();
+                        notebook.set_dirty(true);
+                    }
                 }
             }
         }
-        Object.keys(extraActions).forEach((namespace) => {
-            Object.keys(extraActions[namespace]).forEach((actionName) => {
-                var existingAction = IPython.actions._actions["{0}:{1}".format(namespace, actionName)]
-                var newAction = extraActions[namespace][actionName]
-                var action = () => {
-                    // existing action performed first, new action performed next
-                    if (!newAction.overwrite) {
-                        existingAction.handler(IPython)
+
+        var enableNewActions = () => {
+            Object.keys(piepackerActions).forEach((namespace) => {
+                Object.keys(piepackerActions[namespace]).forEach((actionName) => {
+                    var existingAction = IPython.actions._actions["{0}:{1}".format(namespace, actionName)]
+                    var newAction = piepackerActions[namespace][actionName]
+                    var action = () => {
+                        // existing action performed first, new action performed next
+                        if (!newAction.overwrite) {
+                            existingAction.handler(IPython)
+                        }
+                        newAction.handler(IPython)
                     }
-                    newAction.handler(IPython)
-                }
+                    IPython.actions.register(action, actionName, namespace)
+                })
+            })    
+        }
+
+        var restoreNormalActions = () => {
+            Object.keys(originalActions).forEach((actionName) => {
+                var action = IPython.actions._actions["jupyter-notebook:{1}".format(actionName)]
                 IPython.actions.register(action, actionName, namespace)
             })
-        })
-
-        var disable_shortcuts = () => {
-            IPython.keyboard_manager.command_shortcuts.remove_shortcut('shift-enter')
-            IPython.keyboard_manager.edit_shortcuts.remove_shortcut('shift-enter')
         }
-        
-        var enable_shortcuts = () => {
-            IPython.keyboard_manager.command_shortcuts.add_shortcut('shift-enter', 'jupyter-notebook:run-cell-and-select-next', false)
-            IPython.keyboard_manager.edit_shortcuts.add_shortcut('shift-enter', 'jupyter-notebook:run-cell-and-select-next', false)
-        }
-        
-        var execute_cell_and_select_below = function () {
-            kernel = getActiveKernel()
-            var notebook = IPython.notebook
-            var indices = notebook.get_selected_cells_indices();
-            var cell_index;
-            if (indices.length > 1) {
-                console.error("exec multiple cells: not supported");
-                return;
-            }
-            var cell = notebook.get_selected_cell();
-            var code = cell.get_text()
-            cell.output_area.clear_output();
-            // // Execute and handle replies on the kernel.
-            var future = kernel.requestExecute({ code: code });
-            // // record each IOPub message
-            future.onIOPub = function(msg) {
-                cell.output_area.handle_output(msg)
-            };
-            future.onReply = function(reply) {
-                console.log('Got execute reply {0}'.format(reply));
-            };
-            future.done.then(function() {
-                console.log('done!');
-            });
-        
-            // If we are at the end always insert a new cell and return
-            cell_index = notebook.find_cell_index(cell);
-            if (cell_index === (notebook.ncells()-1)) {
-                notebook.command_mode();
-                notebook.insert_cell_below();
-                notebook.select(cell_index+1);
-                var nextCell = notebook.get_selected_cell();
-                nextCell.code_mirror.setOption('extraKeys', {
-                    "Shift-Enter": function(cm) {
-                        execute_cell_and_select_below(notebook, kernel)
-                    }
-                });
-                nextCell.code_mirror.setOption('keyMap', 'sublime')
-                nextCell.code_mirror.setOption('lineNumbers', true)
-                notebook.edit_mode();
-                notebook.scroll_to_bottom();
-                notebook.set_dirty(true);
-                return;
-            }
-        
-            notebook.command_mode();
-            notebook.select(cell_index+1);
-            notebook.focus_cell();
-            notebook.set_dirty(true);
-        };
 
         // var startNewKernel = services.Kernel.startNew;
         var kernelOptions = {
@@ -320,8 +323,7 @@ define([
         cell.Cell.options_default.cm_config.keyMap = 'sublime';
         var cells = IPython.notebook.get_cells()
         for(var i=0; i< cells.length; i++){
-            cells[i].code_mirror.setOption('keyMap', 'sublime');
-            cells[i].code_mirror.setOption('lineNumbers', true);
+            configNewCell(cells[i])
         }
         // Create top header
         $('#header-container').prepend(
@@ -341,30 +343,16 @@ define([
                     setActiveKernel(krnl)
                     console.log('Kernel started:', krnl)
                     kernelSetInfo()
-                    cells = IPython.notebook.get_cells()
-                    for(var i = 0; i < cells.length; i++) {
-                        cells[i].code_mirror.setOption('extraKeys', {
-                            "Shift-Enter": function(cm) {
-                                execute_cell_and_select_below()
-                            }
-                        });
-                    }
-                    disable_shortcuts()
+                    enableNewActions()
                 })
+                // TODO: add error handling
             }
             else if($(this).prop("checked") == false){
                 kernel = getActiveKernel()
                 if (kernel == undefined) {
                     return
                 }
-                services.Kernel.shutdown(kernel.id).then(function() {
-                    kernelSetInfo()
-                    cells = IPython.notebook.get_cells()
-                    for(var i = 0; i < cells.length; i++) {
-                        cells[i].code_mirror.setOption('extraKeys', {})
-                    }
-                    enable_shortcuts()
-                })
+                restoreNormalActions()
                 setActiveKernel(undefined)
             }
         });
