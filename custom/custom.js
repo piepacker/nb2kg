@@ -137,13 +137,7 @@
   "buffers": [],
   "msg_type": "status"
 }
-
-
-{"parent_header":{"session":"632ad5181b6236f308e9521417cb7095","username":"","date":"2019-07-27T22:12:26.049890","msg_id":"7d8ee63c97a66554dfb9b0b2185586c1","version":"5.2","msg_type":"execute_request"},"channel":"iopub","header":{"session":"744992ca-3e32-48db-8598-e673c139ea9e","username":"username","date":"2019-07-27T22:12:26.051210","msg_id":"d751b057-8a71-40eb-bc78-7a614589cf34","version":"5.0","msg_type":"status"},"metadata":{},"msg_id":"d751b057-8a71-40eb-bc78-7a614589cf34","content":{"execution_state":"busy"},"buffers":[],"msg_type":"status"}
-{"parent_header":{"session":"632ad5181b6236f308e9521417cb7095","username":"","date":"2019-07-27T22:12:26.049890","msg_id":"7d8ee63c97a66554dfb9b0b2185586c1","version":"5.2","msg_type":"execute_request"},"channel":"iopub","header":{"session":"744992ca-3e32-48db-8598-e673c139ea9e","username":"username","date":"2019-07-27T22:12:26.052131","msg_id":"98d09b51-9785-407c-ac33-bde7df421846","version":"5.0","msg_type":"execute_input"},"metadata":{},"msg_id":"98d09b51-9785-407c-ac33-bde7df421846","content":{"code":"print(\"hello\")","execution_count":1},"buffers":[],"msg_type":"execute_input"}
-{"parent_header":{"session":"632ad5181b6236f308e9521417cb7095","username":"","date":"2019-07-27T22:12:26.049890","msg_id":"7d8ee63c97a66554dfb9b0b2185586c1","version":"5.2","msg_type":"execute_request"},"channel":"iopub","header":{"session":"744992ca-3e32-48db-8598-e673c139ea9e","username":"username","date":"2019-07-27T22:12:26.064065","msg_id":"664a13f7-f8b2-4f99-b695-a97e1c600290","version":"5.0","msg_type":"stream"},"metadata":{},"msg_id":"664a13f7-f8b2-4f99-b695-a97e1c600290","content":{"text":"hello\n","name":"stdout"},"buffers":[],"msg_type":"stream"}
-{"parent_header":{"session":"632ad5181b6236f308e9521417cb7095","username":"","date":"2019-07-27T22:12:26.049890","msg_id":"7d8ee63c97a66554dfb9b0b2185586c1","version":"5.2","msg_type":"execute_request"},"channel":"iopub","header":{"session":"744992ca-3e32-48db-8598-e673c139ea9e","username":"username","date":"2019-07-27T22:12:26.069105","msg_id":"127c1cbe-8207-4635-9a12-a60890437d4c","version":"5.0","msg_type":"status"},"metadata":{},"msg_id":"127c1cbe-8207-4635-9a12-a60890437d4c","content":{"execution_state":"idle"},"buffers":[],"msg_type":"status"}
-  */
+*/
 
 MathJax.Hub.Config({
         "HTML-CSS": {
@@ -167,13 +161,6 @@ require.config({
 
 // Helper Functions 
 
-var kernelSetInfo = (kernel) => {
-    if (kernel == undefined) {
-        $('#kernel-info').text('Piepacker is inactive')
-    } else {
-        $('#kernel-info').text("Piepacker is active: {0}".format(kernel.id))
-    }
-}
 const sleep = (milliseconds) => {
     return new Promise(resolve => setTimeout(resolve, milliseconds))
 }
@@ -190,81 +177,151 @@ if (!String.prototype.format) {
     };
 }
 
-var disable_shortcuts = () => {
-    IPython.keyboard_manager.command_shortcuts.remove_shortcut('shift-enter')
-    IPython.keyboard_manager.edit_shortcuts.remove_shortcut('shift-enter')
+var _activeKernel = undefined
+var getActiveKernel = () => {
+    return _activeKernel
 }
-
-var enable_shortcuts = () => {
-    IPython.keyboard_manager.command_shortcuts.add_shortcut('shift-enter', 'jupyter-notebook:run-cell-and-select-next', false)
-    IPython.keyboard_manager.edit_shortcuts.add_shortcut('shift-enter', 'jupyter-notebook:run-cell-and-select-next', false)
+var setActiveKernel = (krnl) => {
+    _activeKernel = krnl
 }
-
-var execute_cell_and_select_below = function (notebook, kernel) {
-    var indices = notebook.get_selected_cells_indices();
-    var cell_index;
-    if (indices.length > 1) {
-        console.error("exec multiple cells: not supported");
-        return;
-    }
-    var cell = notebook.get_selected_cell();
-    var code = cell.get_text()
-    cell.output_area.clear_output();
-    // // Execute and handle replies on the kernel.
-    var future = kernel.requestExecute({ code: code });
-    // // record each IOPub message
-    future.onIOPub = function(msg) {
-        cell.output_area.handle_output(msg)
-    };
-    future.onReply = function(reply) {
-        console.log('Got execute reply {0}'.format(reply));
-      };
-    future.done.then(function() {
-        console.log('done!');
-    });
-
-    // If we are at the end always insert a new cell and return
-    cell_index = notebook.find_cell_index(cell);
-    if (cell_index === (notebook.ncells()-1)) {
-        notebook.command_mode();
-        notebook.insert_cell_below();
-        notebook.select(cell_index+1);
-        notebook.edit_mode();
-        notebook.scroll_to_bottom();
-        notebook.set_dirty(true);
-        return;
-    }
-
-    notebook.command_mode();
-    notebook.select(cell_index+1);
-    notebook.focus_cell();
-    notebook.set_dirty(true);
-};
 
 // Main
 define([
-    'base/js/events',
     'base/js/namespace',
     '@jupyterlab/services',
+    "notebook/js/cell",
+    "notebook/js/actions",
     "codemirror/keymap/sublime",
     "codemirror/lib/codemirror",
-    "notebook/js/cell",
-], function(events, IPython, services, sublime, CodeMirror, cell) {
-    var startNewKernel = services.Kernel.startNew;
-    var kernelOptions = {
-        name: 'python'
-    };
-    var kernel = undefined;
-    
+], function(IPython, services, cell, actions, sublime, CodeMirror) {
     // TODO: fix this
     sleep(300).then(() => {
+        km = new services.KernelManager({
+            serverSettings: services.ServerConnection.makeSettings({
+                baseUrl: "http://0.0.0.0:9889/",
+                wsUrl: "ws://0.0.0.0:9889/",
+            })
+        })
+
+        var kernelSetInfo = () => {
+            kernel = getActiveKernel()
+            if (kernel == undefined) {
+                $('#kernel-info').text('Piepacker is inactive')
+            } else {
+                $('#kernel-info').text("Piepacker is active: {0}".format(kernel.id))
+            }
+        }
+
+        var extraActions = {
+            'jupyter-notebook': {
+                'insert-cell-below': {
+                    overwrite: false,
+                    handler: function(env) {
+                        var newCell = env.notebook.get_selected_cell();
+                        newCell.code_mirror.setOption('keyMap', 'sublime')
+                        newCell.code_mirror.setOption('lineNumbers', true)
+                        kernel = getActiveKernel()
+                        if (kernel == undefined) {
+                            return
+                        }
+                        newCell.code_mirror.setOption('extraKeys', {
+                            "Shift-Enter": function(cm) {
+                                execute_cell_and_select_below()
+                            }
+                        });
+                    }
+                }
+            }
+        }
+        Object.keys(extraActions).forEach((namespace) => {
+            Object.keys(extraActions[namespace]).forEach((actionName) => {
+                var existingAction = IPython.actions._actions["{0}:{1}".format(namespace, actionName)]
+                var newAction = extraActions[namespace][actionName]
+                var action = () => {
+                    // existing action performed first, new action performed next
+                    if (!newAction.overwrite) {
+                        existingAction.handler(IPython)
+                    }
+                    newAction.handler(IPython)
+                }
+                IPython.actions.register(action, actionName, namespace)
+            })
+        })
+
+        var disable_shortcuts = () => {
+            IPython.keyboard_manager.command_shortcuts.remove_shortcut('shift-enter')
+            IPython.keyboard_manager.edit_shortcuts.remove_shortcut('shift-enter')
+        }
+        
+        var enable_shortcuts = () => {
+            IPython.keyboard_manager.command_shortcuts.add_shortcut('shift-enter', 'jupyter-notebook:run-cell-and-select-next', false)
+            IPython.keyboard_manager.edit_shortcuts.add_shortcut('shift-enter', 'jupyter-notebook:run-cell-and-select-next', false)
+        }
+        
+        var execute_cell_and_select_below = function () {
+            kernel = getActiveKernel()
+            var notebook = IPython.notebook
+            var indices = notebook.get_selected_cells_indices();
+            var cell_index;
+            if (indices.length > 1) {
+                console.error("exec multiple cells: not supported");
+                return;
+            }
+            var cell = notebook.get_selected_cell();
+            var code = cell.get_text()
+            cell.output_area.clear_output();
+            // // Execute and handle replies on the kernel.
+            var future = kernel.requestExecute({ code: code });
+            // // record each IOPub message
+            future.onIOPub = function(msg) {
+                cell.output_area.handle_output(msg)
+            };
+            future.onReply = function(reply) {
+                console.log('Got execute reply {0}'.format(reply));
+            };
+            future.done.then(function() {
+                console.log('done!');
+            });
+        
+            // If we are at the end always insert a new cell and return
+            cell_index = notebook.find_cell_index(cell);
+            if (cell_index === (notebook.ncells()-1)) {
+                notebook.command_mode();
+                notebook.insert_cell_below();
+                notebook.select(cell_index+1);
+                var nextCell = notebook.get_selected_cell();
+                nextCell.code_mirror.setOption('extraKeys', {
+                    "Shift-Enter": function(cm) {
+                        execute_cell_and_select_below(notebook, kernel)
+                    }
+                });
+                nextCell.code_mirror.setOption('keyMap', 'sublime')
+                nextCell.code_mirror.setOption('lineNumbers', true)
+                notebook.edit_mode();
+                notebook.scroll_to_bottom();
+                notebook.set_dirty(true);
+                return;
+            }
+        
+            notebook.command_mode();
+            notebook.select(cell_index+1);
+            notebook.focus_cell();
+            notebook.set_dirty(true);
+        };
+
+        // var startNewKernel = services.Kernel.startNew;
+        var kernelOptions = {
+            name: 'python',
+        };
+
         IPython._target = '_self';
         
-        // sublime keymap
+        // cell initial setup
         cell.Cell.options_default.cm_config.keyMap = 'sublime';
-        var cells = IPython.notebook.get_cells();
-        for(var cl=0; cl< cells.length; cl++){
-            cells[cl].code_mirror.setOption('keyMap', 'sublime');
+        var cells = IPython.notebook.get_cells()
+        for(var i=0; i< cells.length; i++){
+            cells[i].code_mirror.setOption('keyMap', 'sublime');
+            cells[i].code_mirror.setOption('lineNumbers', true);
         }
         // Create top header
         $('#header-container').prepend(
@@ -277,21 +334,18 @@ define([
                 '<input type="checkbox" id="piepacker-toggle"><span class="slider round"></span>' +
             '</div></label></div>'
         )          
-            
-        // line numbers
-        for(var i=0; i< cells.length; i++){
-            cells[i].code_mirror.setOption('lineNumbers', true);
-        }
+        
         $('#piepacker-toggle').click(function(){
             if($(this).prop("checked") == true){
-                startNewKernel(kernelOptions).then(function(krnl) {
-                    kernel = krnl
+                km.startNew(kernelOptions).then(function(krnl) {
+                    setActiveKernel(krnl)
                     console.log('Kernel started:', krnl)
-                    kernelSetInfo(kernel)
+                    kernelSetInfo()
+                    cells = IPython.notebook.get_cells()
                     for(var i = 0; i < cells.length; i++) {
                         cells[i].code_mirror.setOption('extraKeys', {
                             "Shift-Enter": function(cm) {
-                                execute_cell_and_select_below(IPython.notebook, kernel)
+                                execute_cell_and_select_below()
                             }
                         });
                     }
@@ -299,13 +353,19 @@ define([
                 })
             }
             else if($(this).prop("checked") == false){
+                kernel = getActiveKernel()
+                if (kernel == undefined) {
+                    return
+                }
                 services.Kernel.shutdown(kernel.id).then(function() {
                     kernelSetInfo()
+                    cells = IPython.notebook.get_cells()
                     for(var i = 0; i < cells.length; i++) {
                         cells[i].code_mirror.setOption('extraKeys', {})
                     }
                     enable_shortcuts()
                 })
+                setActiveKernel(undefined)
             }
         });
     })
